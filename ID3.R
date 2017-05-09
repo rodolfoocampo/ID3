@@ -1,9 +1,8 @@
 library(readr)
 library(dplyr)
+library(data.tree)
 
-mtcars
-length(unique(vector))
-
+#### ENTROPY FUNCTION #####
 entropy <- function(vector){
   h <- 0
   vector <- factor(vector)
@@ -12,15 +11,17 @@ entropy <- function(vector){
     # class sum is the number of occurences for class i
     class_sum <- (sum(vector == i))
     # probability of the class i 
-    pi <- class_sum/total_obs
+    pri <- class_sum/total_obs
    
     # h accumulates the variable's entropy
-    h <- h + (log2(1/pi))*pi
+    h <- h + (log2(1/pri))*pri
   }
   h
 }
 
-mtcars
+
+
+##### INFORMATION GAIN FUNCTION
 
 whole_data <- mtcars
 # dummy variable for testing -> will remove
@@ -41,13 +42,29 @@ information_gain <- function(attribute_colname, target_colname, whole_data){
     target_entropy_i <- entropy(subset_i[,target_colname])
     print(target_entropy_i)
     class_sum <- sum(attribute_factors == i)
-    pi <- class_sum/total
-    # Calculamos la probabilidad y la multiplicamos por la entropia del target en el subset
-    entropy_i_sum <- entropy_i_sum + target_entropy_i*pi 
+    pri <- class_sum/total
+    # Calculamos la probabilidad y la multiplicamos por la entropria del target en el subset
+    entropy_i_sum <- entropy_i_sum + target_entropy_i*pri 
   }
   IG <- target_entropy - entropy_i_sum
   IG
 }
 
-ig <- information_gain('gear', 'mpg', mtcars)
+dim(mtcars)
+###### ID3 ALGORITHM
+
+
+train_id3 <- function(whole_data, target_colname){
+  
+  if(entropy(whole_data[,target_colname]) == 0){
+    root <- Node$new(whole_data[1,target_colname])
+  } else if (length(whole_data) == 1) {
+    freqs <- table(whole_data[,target_colname]) %>% as.data.frame() 
+    value <- filter(freqs, Freq == max(freqs$Freq))[1,1] 
+    root <- Node$new(value)
+  } else {
+    
+  }
+  
+}
 
