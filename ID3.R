@@ -96,8 +96,6 @@ predict_id3 <- function(tree, observation){
 }
 
 
-
-
 predict_id3(tree, feat_cars)
 
 
