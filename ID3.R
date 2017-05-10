@@ -23,11 +23,6 @@ entropy <- function(vector){
 
 ##### INFORMATION GAIN FUNCTION
 
-whole_data <- mtcars
-# dummy variable for testing -> will remove
-target_colname <- 'mpg'
-attribute_colname <- 'cyl'
-
 
 information_gain <- function(attribute_colname, target_colname, whole_data){
   # calculate entropy for target vector
@@ -51,9 +46,10 @@ information_gain <- function(attribute_colname, target_colname, whole_data){
 }
 
 ###### ID3 ALGORITHM
+
 whole_data <- mtcars
 target_colname
-root <- Node$new('car')
+node <- Node$new('car')
 train_id3 <- function(whole_data, target_colname, root){
   if(entropy(whole_data[,target_colname]) == 0){
     child <- root$AddChild(whole_data[1,target_colname])
@@ -76,15 +72,15 @@ train_id3 <- function(whole_data, target_colname, root){
     root$variable <- min_var
     at_factors <- whole_data[,min_var] %>% as.factor()
     for(i in levels(at_factors)){
-      i <- 0
       subset_i <- filter(whole_data, whole_data[,min_var]==i) %>% select(-which(names(whole_data) == min_var))
       child <- root$AddChild(i)
-      print(root, "variable")
-      
+      train_id3(subset_i, target_colname, child)      
     }
+    print(root, "variable")
   }
+  root
 }
 
-train_id3(subset_i, target_colname, child)
-print(root, 'variable')
-mtcars
+length(subset_i) <- filter(whole_data, whole_data[,min_var]==0) %>% select(-which(names(whole_data) == min_var))
+tree <- train_id3(mtcars, target_colname, root=node)
+tree
