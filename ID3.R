@@ -49,9 +49,9 @@ information_gain <- function(attribute_colname, target_colname, whole_data){
 
 ###### ID3 ALGORITHM
 
-whole_data <- mtcars
-target_colname
-node <- Node$new('car')
+
+
+node <- Node$new('mushroom')
 train_id3 <- function(whole_data, target_colname, root){
   if(entropy(whole_data[,target_colname]) == 0){
     child <- root$AddChild(whole_data[1,target_colname])
@@ -83,6 +83,25 @@ train_id3 <- function(whole_data, target_colname, root){
   root
 }
 
+feat_cars <- mtcars[1,]
 
-tree <- train_id3(mtcars, target_colname, root=node)
-tree
+predict_id3 <- function(tree, observation){
+  if(tree$children[[1]]$isLeaf){
+    return (tree$children[[1]]$name)
+  } else {
+    child <- tree$children[[observation[[tree$variable]]]]
+    return (predict_id3(child, observation) )
+  }
+  
+}
+
+
+
+
+predict_id3(tree, feat_cars)
+
+
+tree <- train_id3(mushroom[2:5,], target_colname, root=node)
+tree <- train_id3(mtcars[6:32,], 'mpg', root=node)
+print(tree, 'variable')
+
