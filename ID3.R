@@ -2,6 +2,8 @@ library(readr)
 library(dplyr)
 library(data.tree)
 
+
+
 #### ENTROPY FUNCTION #####
 entropy <- function(vector){
   h <- 0
@@ -81,6 +83,6 @@ train_id3 <- function(whole_data, target_colname, root){
   root
 }
 
-length(subset_i) <- filter(whole_data, whole_data[,min_var]==0) %>% select(-which(names(whole_data) == min_var))
+
 tree <- train_id3(mtcars, target_colname, root=node)
 tree
