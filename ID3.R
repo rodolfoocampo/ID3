@@ -37,34 +37,54 @@ information_gain <- function(attribute_colname, target_colname, whole_data){
   total <- length(attribute_factors)
   entropy_i_sum <- 0
   for(i in levels(attribute_factors)){
-    print(i)
+    
     subset_i <- filter(whole_data, whole_data[,attribute_colname] == i)
     target_entropy_i <- entropy(subset_i[,target_colname])
-    print(target_entropy_i)
+    
     class_sum <- sum(attribute_factors == i)
     pri <- class_sum/total
-    # Calculamos la probabilidad y la multiplicamos por la entropria del target en el subset
+    # Calculamos la probabilidad y la multiplicamos por la entropia del target en el subset
     entropy_i_sum <- entropy_i_sum + target_entropy_i*pri 
   }
   IG <- target_entropy - entropy_i_sum
   IG
 }
 
-dim(mtcars)
 ###### ID3 ALGORITHM
-
-
-train_id3 <- function(whole_data, target_colname){
-  
+whole_data <- mtcars
+target_colname
+root <- Node$new('car')
+train_id3 <- function(whole_data, target_colname, root){
   if(entropy(whole_data[,target_colname]) == 0){
-    root <- Node$new(whole_data[1,target_colname])
+    child <- root$AddChild(whole_data[1,target_colname])
+    root$variable <- target_colname
   } else if (length(whole_data) == 1) {
     freqs <- table(whole_data[,target_colname]) %>% as.data.frame() 
     value <- filter(freqs, Freq == max(freqs$Freq))[1,1] 
-    root <- Node$new(value)
+    child <- root$AddChild(value)
+    root$variable <- target_colname
   } else {
-    
+    attributes <- names(select(whole_data, -which(names(whole_data) == target_colname))) %>% as.factor()
+    min_val <- 100000
+    for (i in levels(attributes)){
+      ig <- information_gain(i,target_colname,whole_data)
+      if(ig < min_val){
+        min_val <- ig
+        min_var <- i
+      }
+    }
+    root$variable <- min_var
+    at_factors <- whole_data[,min_var] %>% as.factor()
+    for(i in levels(at_factors)){
+      i <- 0
+      subset_i <- filter(whole_data, whole_data[,min_var]==i) %>% select(-which(names(whole_data) == min_var))
+      child <- root$AddChild(i)
+      print(root, "variable")
+      
+    }
   }
-  
 }
 
+train_id3(subset_i, target_colname, child)
+print(root, 'variable')
+mtcars
