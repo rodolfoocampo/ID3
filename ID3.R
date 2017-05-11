@@ -25,6 +25,10 @@ entropy <- function(vector){
 
 ##### INFORMATION GAIN FUNCTION
 
+information_gain('size','edibility', mushroom)
+information_gain('color','edibility', mushroom)
+information_gain('points','edibility', mushroom)
+
 
 information_gain <- function(attribute_colname, target_colname, whole_data){
   # calculate entropy for target vector
@@ -51,7 +55,7 @@ information_gain <- function(attribute_colname, target_colname, whole_data){
 
 
 
-node <- Node$new('mushroom')
+node <- Node$new('m')
 train_id3 <- function(whole_data, target_colname, root){
   if(entropy(whole_data[,target_colname]) == 0){
     child <- root$AddChild(whole_data[1,target_colname])
@@ -63,18 +67,18 @@ train_id3 <- function(whole_data, target_colname, root){
     root$variable <- target_colname
   } else {
     attributes <- names(select(whole_data, -which(names(whole_data) == target_colname))) %>% as.factor()
-    min_val <- 100000
+    max_val <- -100000
     for (i in levels(attributes)){
       ig <- information_gain(i,target_colname,whole_data)
-      if(ig < min_val){
-        min_val <- ig
-        min_var <- i
+      if(ig > max_val){
+        max_val <- ig
+        max_var <- i
       }
     }
-    root$variable <- min_var
-    at_factors <- whole_data[,min_var] %>% as.factor()
+    root$variable <- max_var
+    at_factors <- whole_data[,max_var] %>% as.factor()
     for(i in levels(at_factors)){
-      subset_i <- filter(whole_data, whole_data[,min_var]==i) %>% select(-which(names(whole_data) == min_var))
+      subset_i <- filter(whole_data, whole_data[,max_var]==i) %>% select(-which(names(whole_data) == max_var))
       child <- root$AddChild(i)
       train_id3(subset_i, target_colname, child)      
     }
@@ -89,17 +93,22 @@ predict_id3 <- function(tree, observation){
   if(tree$children[[1]]$isLeaf){
     return (tree$children[[1]]$name)
   } else {
-    child <- tree$children[[observation[[tree$variable]]]]
+    which_child <- observation[[tree$variable]] %>% as.character()
+    child <- tree$children[[which_child]]
     return (predict_id3(child, observation) )
   }
-  
 }
 
+data("mushroom")
 
 predict_id3(tree, feat_cars)
 
+predict_id3(tree, feat_m)
 
-tree <- train_id3(mushroom[2:5,], target_colname, root=node)
-tree <- train_id3(mtcars[6:32,], 'mpg', root=node)
+feat_m <- mushroom[1,]
+tree <- train_id3(mushroom, 'edibility' , Node$new('node'))
+tree <- train_id3(mtcars[6:32,], 'mpg', Node$new('node'))
 print(tree, 'variable')
+
+
 
