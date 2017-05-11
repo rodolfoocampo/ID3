@@ -1,8 +1,7 @@
 library(readr)
 library(dplyr)
 library(data.tree)
-
-
+library(readr)
 
 #### ENTROPY FUNCTION #####
 entropy <- function(vector){
@@ -14,7 +13,7 @@ entropy <- function(vector){
     class_sum <- (sum(vector == i))
     # probability of the class i 
     pri <- class_sum/total_obs
-   
+    
     # h accumulates the variable's entropy
     h <- h + (log2(1/pri))*pri
   }
@@ -25,16 +24,12 @@ entropy <- function(vector){
 
 ##### INFORMATION GAIN FUNCTION
 
-information_gain('size','edibility', mushroom)
-information_gain('color','edibility', mushroom)
-information_gain('points','edibility', mushroom)
-
-
 information_gain <- function(attribute_colname, target_colname, whole_data){
   # calculate entropy for target vector
   target_entropy <- entropy(whole_data[,target_colname])
   target_entropy_i <- 0
-  attribute_factors <- as.factor(whole_data[,attribute_colname])
+  attribute_factors <- as.factor(whole_data[,attribute_colname]) %>% factor(ordered = FALSE )
+  
   total <- length(attribute_factors)
   entropy_i_sum <- 0
   for(i in levels(attribute_factors)){
@@ -42,7 +37,7 @@ information_gain <- function(attribute_colname, target_colname, whole_data){
     subset_i <- filter(whole_data, whole_data[,attribute_colname] == i)
     target_entropy_i <- entropy(subset_i[,target_colname])
     
-    class_sum <- sum(attribute_factors == i)
+    class_sum <- sum(attribute_factors == i, na.rm = TRUE)
     pri <- class_sum/total
     # Calculamos la probabilidad y la multiplicamos por la entropia del target en el subset
     entropy_i_sum <- entropy_i_sum + target_entropy_i*pri 
@@ -53,11 +48,8 @@ information_gain <- function(attribute_colname, target_colname, whole_data){
 
 ###### ID3 ALGORITHM
 
-
-
-node <- Node$new('m')
 train_id3 <- function(whole_data, target_colname, root){
-  if(entropy(whole_data[,target_colname]) == 0){
+  if(entropy(whole_data[[target_colname]]) == 0){
     child <- root$AddChild(whole_data[1,target_colname])
     root$variable <- target_colname
   } else if (length(whole_data) == 1) {
@@ -77,17 +69,17 @@ train_id3 <- function(whole_data, target_colname, root){
     }
     root$variable <- max_var
     at_factors <- whole_data[,max_var] %>% as.factor()
-    for(i in levels(at_factors)){
+    for(i in unique(at_factors[!is.na(at_factors)])){
       subset_i <- filter(whole_data, whole_data[,max_var]==i) %>% select(-which(names(whole_data) == max_var))
       child <- root$AddChild(i)
       train_id3(subset_i, target_colname, child)      
     }
-    print(root, "variable")
+    
   }
   root
 }
 
-feat_cars <- mtcars[1,]
+
 
 predict_id3 <- function(tree, observation){
   if(tree$children[[1]]$isLeaf){
@@ -99,16 +91,53 @@ predict_id3 <- function(tree, observation){
   }
 }
 
+
+make_discrete <- function(olddata){
+  data <- olddata
+  for(i in names(data)){
+    if(is.numeric(olddata[[i]])){
+      values <- discretize(data[[i]], categories = 4)
+      data[[i]] <- values
+    }
+  }
+  data
+}
+
+clean_data <- function(data){
+ data <- make_discrete(data)
+ data <- data[complete.cases(data),]
+ data
+}
+
+data("IncomeESL")
+IncomeESL <- clean_data(IncomeESL)
+inc_training <- IncomeESL[1:1000,]
+
+income_tree <- train_id3(inc_training,'age', Node$new('Person'))
+
+print(income_tree,'variable')
+blind_test <- IncomeESL[1010,]
+
+predict_id3(income_tree,blind_test)
+
+## Titanic 
+
+pokemon <- read_csv("/Users/rodolfoocampo/Documents/Mineria/Datos/tarea_pokemon/pokemon.csv")
+
+pokemon <- clean_data(pokemon) %>% as.data.frame() %>% select(-Name)
+pok_train <- pokemon[5:412,]
+
+pokemon_tree <- train_id3(pok_train,'Speed', Node$new('Pokemon')) 
+
+poke_blind <- pokemon[1,]
+print(pokemon_tree,'variable')
+
+
+predict_id3(pokemon_tree,poke_blind)
+
+
+
+
 data("mushroom")
-
-predict_id3(tree, feat_cars)
-
-predict_id3(tree, feat_m)
-
-feat_m <- mushroom[1,]
-tree <- train_id3(mushroom[2:5,], 'edibility' , Node$new('node'))
-tree <- train_id3(mtcars[5:32,], 'mpg', Node$new('node'))
-print(tree, 'variable')
-
 
 
